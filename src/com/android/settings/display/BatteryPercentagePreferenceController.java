@@ -31,6 +31,8 @@ import com.android.settings.core.BasePreferenceController;
 import com.android.settings.core.PreferenceControllerMixin;
 import com.android.settings.overlay.FeatureFactory;
 
+import lineageos.providers.LineageSettings;
+
 /**
  * A controller to manage the switch for showing battery percentage in the status bar.
  */
@@ -67,12 +69,22 @@ public class BatteryPercentagePreferenceController extends BasePreferenceControl
 
     @Override
     public void updateState(Preference preference) {
-        int setting = Settings.System.getInt(mContext.getContentResolver(),
-                SHOW_BATTERY_PERCENT,
-                mContext.getResources().getBoolean(
-                        R.bool.config_defaultBatteryPercentageSetting) ? 1 : 0);
+        // SystemUI (Lineage pipeline) consumes the Lineage mode key; fall back
+        // to the legacy AOSP boolean when it was never set.
+        int mode = LineageSettings.System.getInt(mContext.getContentResolver(),
+                LineageSettings.System.STATUS_BAR_SHOW_BATTERY_PERCENT, -1);
+        boolean shown;
+        if (mode == -1) {
+            int setting = Settings.System.getInt(mContext.getContentResolver(),
+                    SHOW_BATTERY_PERCENT,
+                    mContext.getResources().getBoolean(
+                            R.bool.config_defaultBatteryPercentageSetting) ? 1 : 0);
+            shown = setting == 1;
+        } else {
+            shown = mode != 0;
+        }
 
-        ((TwoStatePreference) preference).setChecked(setting == 1);
+        ((TwoStatePreference) preference).setChecked(shown);
     }
 
     @Override
@@ -80,6 +92,11 @@ public class BatteryPercentagePreferenceController extends BasePreferenceControl
         boolean showPercentage = (Boolean) newValue;
         Settings.System.putInt(mContext.getContentResolver(), SHOW_BATTERY_PERCENT,
                 showPercentage ? 1 : 0);
+        // Mirror into the Lineage mode key actually read by SystemUI
+        // (0 = hidden, 2 = next to the icon).
+        LineageSettings.System.putInt(mContext.getContentResolver(),
+                LineageSettings.System.STATUS_BAR_SHOW_BATTERY_PERCENT,
+                showPercentage ? 2 : 0);
         FeatureFactory.getFeatureFactory().getMetricsFeatureProvider()
                 .action(mContext, SettingsEnums.OPEN_BATTERY_PERCENTAGE, showPercentage);
         return true;
