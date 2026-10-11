@@ -164,6 +164,15 @@
             android:summary="@string/summary_placeholder"
             settings:highlightableMenuKey="@string/menu_key_about_device"
             settings:controller="com.android.settings.deviceinfo.aboutphone.TopLevelAboutDevicePreferenceController"/>
+        <com.android.settings.widget.HomepagePreference
+            android:icon="@drawable/ic_settings_about_device_filled"
+            android:key="top_level_bootleg_dumpster"
+            android:order="-5"
+            android:title="@string/bootleg_dumpster_title"
+            android:summary="@string/bootleg_dumpster_summary"
+            settings:highlightableMenuKey="@string/menu_key_system">
+            <intent android:action="android.intent.action.MAIN" android:targetPackage="com.bootleggers.dumpster" android:targetClass="com.bootleggers.dumpster.MainActivity" />
+        </com.android.settings.widget.HomepagePreference>
     </PreferenceCategory>
 
     <PreferenceCategory
